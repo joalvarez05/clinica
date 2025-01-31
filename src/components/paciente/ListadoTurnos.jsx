@@ -1,9 +1,18 @@
-import React, { useState } from "react";
-import data from "../../data/dataBase";
+import { React, useState } from "react";
 
 function ListadoTurnos() {
-  const [info, setInfo] = useState(data);
-  const pacientes = info.filter((user) => user.role === "PACIENTE");
+  const [info, setInfo] = useState(() => {
+    const turnosGuardados = localStorage.getItem("reservasTurnos");
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!turnosGuardados || !loggedInUser) return [];
+    const reservasTurnos = JSON.parse(turnosGuardados);
+
+    const turnosUsuario = reservasTurnos.filter((turno) => {
+      return turno.paciente && turno.paciente.id === loggedInUser.id;
+    });
+    return turnosUsuario;
+  });
+
   return (
     <div>
       <div className="text-center flex-grow-1">
@@ -13,49 +22,27 @@ function ListadoTurnos() {
             <thead>
               <tr>
                 <th className="text-start text-nowrap">Doctor / Doctora</th>
-                <th className="text-start text-nowrap">Especialidad</th>
                 <th className="text-start text-nowrap">Fecha</th>
-                <th className="text-start text-nowrap">Estado</th>
+                <th className="text-start text-nowrap">Hora</th>
               </tr>
             </thead>
             <tbody>
-              {pacientes.map((doctor) =>
-                doctor.turnos.map((turno) => (
-                  <tr key={turno.id}>
+              {info.length === 0 ? (
+                <td colSpan="3" className="fw-bold py-2">
+                  No hay turnos aun
+                </td>
+              ) : (
+                info.map((turno) => (
+                  <tr key={turno.idUnico}>
                     <td>
                       <div>
                         <div className="d-flex align-items-center">
-                          <img
-                            src={`${
-                              doctor.genre === "male"
-                                ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-phYUCybCZV8ldQUDjk-S_EZumc6lYYA1Hg&s"
-                                : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTv-wn0BeGWOa2CGmYc83SdQtfWwPebF9KX1g&s"
-                            }`}
-                            alt="avatar usuario"
-                            className="avatarPte"
-                            loading="lazy"
-                          />
                           <span className="ms-2">{turno.doctor}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="align-middle text-start">
-                      {turno.especialidad}
-                    </td>
                     <td className="align-middle text-start">{turno.fecha}</td>
-                    <td className="align-middle text-start">
-                      <span
-                        className={`${
-                          turno.estado === "pendiente"
-                            ? "text-danger"
-                            : "text-success"
-                        }`}
-                      >
-                        {turno.estado === "pendiente"
-                          ? "Pendiente"
-                          : "Completado"}
-                      </span>
-                    </td>
+                    <td className="align-middle text-start">{turno.horario}</td>
                   </tr>
                 ))
               )}
